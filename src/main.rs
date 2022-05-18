@@ -113,20 +113,26 @@ fn parse_method(s: &str) -> RequestMethod {
     }
 }
 
-fn parse_api(s: &str) -> RequestApi {
+fn parse_api(s: &str) -> (RequestApi, Vec<&str>) {
     let split = s.split('/');
 
     let api_vec = split.collect::<Vec<&str>>();
 
     if api_vec.len() < 2 {
-        return RequestApi::Unknown;
+        return (RequestApi::Unknown, vec![]);
     }
 
+    let api_param = if api_vec.len() > 2 {
+        api_vec[2..api_vec.len()].to_vec()
+    } else {
+        vec![]
+    };
+
     match api_vec[1] {
-        "add" => RequestApi::Add,
-        "remove" => RequestApi::Remove,
-        "query" => RequestApi::Query,
-        _ => RequestApi::Unknown,
+        "add" => (RequestApi::Add, api_param),
+        "remove" => (RequestApi::Remove, api_param),
+        "query" => (RequestApi::Query, api_param),
+        _ => (RequestApi::Unknown, vec![]),
     }
 }
 
@@ -142,12 +148,21 @@ fn request_parser(req: &mut [u8]) -> String {
     };
 
     let method = parse_method(req_vec[0]);
-    let api = parse_api(req_vec[1]);
+    let (api, api_param) = parse_api(req_vec[1]);
 
     match method {
-        RequestMethod::Get => {}
-        RequestMethod::Post => {}
-        RequestMethod::Delete => {}
+        RequestMethod::Get => match api {
+            RequestApi::Query => {}
+            _ => {}
+        },
+        RequestMethod::Post => match api {
+            RequestApi::Add => {}
+            _ => {}
+        },
+        RequestMethod::Delete => match api {
+            RequestApi::Remove => {}
+            _ => {}
+        },
         RequestMethod::Put => {}
         _ => {
             return "unknown method".to_string();
@@ -173,13 +188,21 @@ mod tests {
 
     #[test]
     fn test_parse_api() -> Result<(), String> {
-        assert_eq!(parse_api("/add/xxx"), RequestApi::Add);
-        assert_eq!(parse_api("/query/xxx"), RequestApi::Query);
-        assert_eq!(parse_api("/remove/xxx"), RequestApi::Remove);
-        assert_eq!(parse_api("add"), RequestApi::Unknown);
-        assert_eq!(parse_api("add/xxx"), RequestApi::Unknown);
-        assert_eq!(parse_api("/"), RequestApi::Unknown);
-        assert_eq!(parse_api(""), RequestApi::Unknown);
+        assert_eq!(parse_api("/add/xxx"), (RequestApi::Add, vec!["xxx"]));
+        assert_eq!(parse_api("/query/xxx"), (RequestApi::Query, vec!["xxx"]));
+        assert_eq!(parse_api("/remove/xxx"), (RequestApi::Remove, vec!["xxx"]));
+        assert_eq!(
+            parse_api("/add/xxx/yyy"),
+            (RequestApi::Add, vec!["xxx", "yyy"])
+        );
+        assert_eq!(
+            parse_api("/add/xxx/yyy/"),
+            (RequestApi::Add, vec!["xxx", "yyy", ""])
+        );
+        assert_eq!(parse_api("add"), (RequestApi::Unknown, vec![]));
+        assert_eq!(parse_api("add/xxx"), (RequestApi::Unknown, vec![]));
+        assert_eq!(parse_api("/"), (RequestApi::Unknown, vec![]));
+        assert_eq!(parse_api(""), (RequestApi::Unknown, vec![]));
         Ok(())
     }
 }
