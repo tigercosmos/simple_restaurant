@@ -89,6 +89,20 @@ enum RequestMethod {
     Unknown,
 }
 
+struct Item {
+    item_id: u32,
+    table_id: u32,
+    prepare_time: u32,
+}
+
+#[derive(PartialEq, Debug)]
+enum RequestApi {
+    Add,
+    Remove,
+    Query,
+    Unknown,
+}
+
 fn parse_method(s: &str) -> RequestMethod {
     match s {
         "GET" => RequestMethod::Get,
@@ -99,21 +113,45 @@ fn parse_method(s: &str) -> RequestMethod {
     }
 }
 
+fn parse_api(s: &str) -> RequestApi {
+    let split = s.split('/');
+
+    let api_vec = split.collect::<Vec<&str>>();
+
+    if api_vec.len() < 2 {
+        return RequestApi::Unknown;
+    }
+
+    match api_vec[1] {
+        "add" => RequestApi::Add,
+        "remove" => RequestApi::Remove,
+        "query" => RequestApi::Query,
+        _ => RequestApi::Unknown,
+    }
+}
+
 fn request_parser(req: &mut [u8]) -> String {
     let req_str = str::from_utf8(req).unwrap();
 
-    let split = req_str.split(" ");
+    let split = req_str.split(' ');
 
     let req_vec = split.collect::<Vec<&str>>();
 
+    if req_vec.len() < 2 {
+        return "some error".to_string();
+    };
+
     let method = parse_method(req_vec[0]);
+    let api = parse_api(req_vec[1]);
 
     match method {
         RequestMethod::Get => {}
         RequestMethod::Post => {}
         RequestMethod::Delete => {}
         RequestMethod::Put => {}
-        _ => { return "unknown method".to_string(); }
+        _ => {
+            return "unknown method".to_string();
+        }
     }
 
     "".to_string()
@@ -130,6 +168,18 @@ mod tests {
         assert_eq!(parse_method("DELETE"), RequestMethod::Delete);
         assert_eq!(parse_method("PUT"), RequestMethod::Put);
         assert_eq!(parse_method("ABC"), RequestMethod::Unknown);
+        Ok(())
+    }
+
+    #[test]
+    fn test_parse_api() -> Result<(), String> {
+        assert_eq!(parse_api("/add/xxx"), RequestApi::Add);
+        assert_eq!(parse_api("/query/xxx"), RequestApi::Query);
+        assert_eq!(parse_api("/remove/xxx"), RequestApi::Remove);
+        assert_eq!(parse_api("add"), RequestApi::Unknown);
+        assert_eq!(parse_api("add/xxx"), RequestApi::Unknown);
+        assert_eq!(parse_api("/"), RequestApi::Unknown);
+        assert_eq!(parse_api(""), RequestApi::Unknown);
         Ok(())
     }
 }
