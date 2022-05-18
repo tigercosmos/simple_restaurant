@@ -28,6 +28,8 @@ use std::env;
 use std::error::Error;
 use std::str;
 
+mod api;
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
     // Allow passing an address to listen on as the first argument of this
@@ -152,15 +154,37 @@ fn request_parser(req: &mut [u8]) -> String {
 
     match method {
         RequestMethod::Get => match api {
-            RequestApi::Query => {}
+            RequestApi::Query => match api_param.len() {
+                1 => {
+                    // `/query/:table_id`
+                    api::query_all();
+                }
+                2 => {
+                    // `/query/:table_id/:item_id`
+                    api::query_one();
+                }
+                _ => return "wrong api".to_string(),
+            },
             _ => {}
         },
         RequestMethod::Post => match api {
-            RequestApi::Add => {}
+            RequestApi::Add => match api_param.len() {
+                1 => {
+                    // `/add/<item>`
+                    api::add_item();
+                }
+                _ => return "wrong api".to_string(),
+            },
             _ => {}
         },
         RequestMethod::Delete => match api {
-            RequestApi::Remove => {}
+            RequestApi::Remove => match api_param.len() {
+                2 => {
+                    // `/romove/:table_id/:item_id`
+                    api::remove_item();
+                }
+                _ => return "wrong api".to_string(),
+            },
             _ => {}
         },
         RequestMethod::Put => {}
