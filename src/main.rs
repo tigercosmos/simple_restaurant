@@ -26,6 +26,7 @@ use tokio::net::TcpListener;
 
 use std::env;
 use std::error::Error;
+use std::str;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
@@ -68,11 +69,67 @@ async fn main() -> Result<(), Box<dyn Error>> {
                     return;
                 }
 
+                let response = request_parser(&mut buf[0..n]);
+
                 socket
-                    .write_all(&buf[0..n])
+                    .write_all(response.as_bytes())
                     .await
                     .expect("failed to write data to socket");
             }
         });
+    }
+}
+
+#[derive(PartialEq, Debug)]
+enum RequestMethod {
+    Get,
+    Post,
+    Delete,
+    Put,
+    Unknown,
+}
+
+fn parse_method(s: &str) -> RequestMethod {
+    match s {
+        "GET" => RequestMethod::Get,
+        "POST" => RequestMethod::Post,
+        "DELETE" => RequestMethod::Delete,
+        "PUT" => RequestMethod::Put,
+        _ => RequestMethod::Unknown,
+    }
+}
+
+fn request_parser(req: &mut [u8]) -> String {
+    let req_str = str::from_utf8(req).unwrap();
+
+    let split = req_str.split(" ");
+
+    let req_vec = split.collect::<Vec<&str>>();
+
+    let method = parse_method(req_vec[0]);
+
+    match method {
+        RequestMethod::Get => {}
+        RequestMethod::Post => {}
+        RequestMethod::Delete => {}
+        RequestMethod::Put => {}
+        _ => { return "unknown method".to_string(); }
+    }
+
+    "".to_string()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_parse_method() -> Result<(), String> {
+        assert_eq!(parse_method("GET"), RequestMethod::Get);
+        assert_eq!(parse_method("POST"), RequestMethod::Post);
+        assert_eq!(parse_method("DELETE"), RequestMethod::Delete);
+        assert_eq!(parse_method("PUT"), RequestMethod::Put);
+        assert_eq!(parse_method("ABC"), RequestMethod::Unknown);
+        Ok(())
     }
 }
