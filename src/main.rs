@@ -29,6 +29,8 @@ use std::error::Error;
 use std::str;
 
 mod api;
+mod table;
+mod lock;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
@@ -89,12 +91,6 @@ enum RequestMethod {
     Delete,
     Put,
     Unknown,
-}
-
-struct Item {
-    item_id: u32,
-    table_id: u32,
-    prepare_time: u32,
 }
 
 #[derive(PartialEq, Debug)]
