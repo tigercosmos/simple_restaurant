@@ -21,16 +21,19 @@
 
 #![warn(rust_2018_idioms)]
 
-use tokio::io::{AsyncReadExt, AsyncWriteExt};
-use tokio::net::TcpListener;
-
 use std::env;
 use std::error::Error;
 use std::str;
+use std::sync::Arc;
+use tokio::io::{AsyncReadExt, AsyncWriteExt};
+use tokio::net::TcpListener;
 
 mod api;
-mod table;
 mod lock;
+mod restaurant;
+mod table;
+
+use restaurant::Restaurant;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
@@ -47,6 +50,9 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let listener = TcpListener::bind(&addr).await?;
     println!("Listening on: {}", addr);
 
+    // create 200 tables for the restaurant
+    let restaurant = Arc::new(Restaurant::new(200));
+
     loop {
         // Asynchronously wait for an inbound socket.
         let (mut socket, _) = listener.accept().await?;
@@ -58,6 +64,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
         //
         // Essentially here we're executing a new task to run concurrently,
         // which will allow all of our clients to be processed concurrently.
+
+        let restaurant = Arc::clone(&restaurant);
 
         tokio::spawn(async move {
             let mut buf = vec![0; 1024];
