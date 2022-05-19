@@ -25,15 +25,21 @@ impl Table {
         }
     }
 
-    pub fn add_item(&mut self, item_id: u32, table_id: u32) -> Result<(), ()> {
+    pub fn add_item(&mut self, item_id: u32, table_id: u32) {
         self.mutex.lock();
 
         let item = Item::new(item_id, table_id, self.rng.gen_range(5..15));
         self.items.insert(item_id, item);
 
         self.mutex.unlock();
+    }
 
-        Ok(())
+    pub fn check_item(&self, item_id: u32) -> Option<&Item> {
+        self.mutex.lock();
+        let check = self.items.get(&item_id);
+        self.mutex.unlock();
+
+        check
     }
 }
 
@@ -73,13 +79,30 @@ mod tests {
         let item_id = 4;
         let table_id = 5;
 
-        t.add_item(item_id, table_id).unwrap();
+        t.add_item(item_id, table_id);
 
         let i = t.items.get(&item_id).unwrap();
 
         assert_eq!(i.item_id, 4);
         assert_eq!(i.table_id, 5);
         assert_eq!(i.prepare_time >= 5 && i.prepare_time < 15, true);
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_table_check_item() -> Result<(), String> {
+        let mut t = Table::new();
+
+        let item_id = 7;
+        let table_id = 9;
+
+        t.add_item(item_id, table_id);
+        let i = t.check_item(item_id).unwrap();
+        assert_eq!(i.item_id, item_id);
+
+        let i2 = t.check_item(123);
+        assert_eq!(i2, None);
 
         Ok(())
     }
