@@ -1,12 +1,12 @@
 use super::lock;
-use rand::rngs::ThreadRng;
-use rand::{thread_rng, Rng};
+use rand::rngs::StdRng;
+use rand::{SeedableRng, Rng};
 use std::collections::HashMap;
 
-struct Table {
+pub struct Table {
     items: HashMap<u32, Item>,
     mutex: lock::Mutex,
-    rng: ThreadRng,
+    rng: StdRng,
 }
 
 #[derive(Debug, PartialEq)]
@@ -21,7 +21,7 @@ impl Table {
         Table {
             items: HashMap::new(),
             mutex: lock::Mutex::new(),
-            rng: thread_rng(),
+            rng: StdRng::from_entropy(),
         }
     }
 
