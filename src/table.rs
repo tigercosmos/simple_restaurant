@@ -41,6 +41,14 @@ impl Table {
 
         check
     }
+
+    pub fn remove_item(&mut self, item_id: u32) -> Option<Item> {
+        self.mutex.lock();
+        let item = self.items.remove(&item_id);
+        self.mutex.unlock();
+
+        item
+    }
 }
 
 impl Item {
@@ -102,6 +110,24 @@ mod tests {
         assert_eq!(i.item_id, item_id);
 
         let i2 = t.check_item(123);
+        assert_eq!(i2, None);
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_table_remove_item() -> Result<(), String> {
+        let mut t = Table::new();
+
+        let item_id = 11;
+        let table_id = 99;
+
+        t.add_item(item_id, table_id);
+
+        let i = t.remove_item(item_id).unwrap();
+        assert_eq!(i.item_id, item_id);
+
+        let i2 = t.remove_item(item_id);
         assert_eq!(i2, None);
 
         Ok(())
