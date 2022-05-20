@@ -46,6 +46,23 @@ impl Table {
     pub fn remove_item(&mut self, item_id: u32) -> Option<Item> {
         self.items.remove(&item_id)
     }
+
+    pub fn print_items(&self) -> String {
+        let mut output = String::from("[");
+
+        for (_, item) in self.items.iter() {
+            let s = format!("{}", item.print());
+            output += &s;
+            output += ", ";
+        }
+        // pop the last ", "
+        output.pop();
+        output.pop();
+
+        output += "]";
+
+        output
+    }
 }
 
 impl Item {
@@ -55,6 +72,15 @@ impl Item {
             table_id: p_table_id,
             prepare_time: p_time,
         }
+    }
+
+    pub fn print(&self) -> String {
+        let s = format!(
+            "{{item_id: {}, table_id: {}, prepare_time: {}}}",
+            self.item_id, self.table_id, self.prepare_time
+        );
+
+        s
     }
 }
 

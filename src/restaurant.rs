@@ -22,7 +22,7 @@ impl Restaurant {
         Restaurant { tables: tables }
     }
 
-    pub fn get_table(self, table_id: u32) -> TablePtr {
+    pub fn get_table(&self, table_id: u32) -> TablePtr {
         Arc::clone(&self.tables[table_id as usize])
     }
 }

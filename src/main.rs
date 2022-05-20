@@ -159,8 +159,11 @@ fn request_parser(req: &mut [u8], restaurant: Restaurant) -> String {
         RequestMethod::Get => match api {
             RequestApi::Query => match api_param.len() {
                 1 => {
+                    // TODO: error handling for not a number
+                    let tid: u32 = api_param[0].parse::<u32>().unwrap();
+
                     // `/query/:table_id`
-                    api::query_all();
+                    api::query_all(tid, restaurant);
                 }
                 2 => {
                     // `/query/:table_id/:item_id`
