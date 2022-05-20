@@ -178,7 +178,7 @@ fn request_parser(req: &mut [u8], restaurant: Restaurant) -> String {
         },
         RequestMethod::Post => match api {
             RequestApi::Add => match api_param.len() {
-                1 => {
+                2 => {
                     let tid: u32 = api_param[0].parse::<u32>().unwrap();
                     let item_data: &str = api_param[1];
 
@@ -214,6 +214,7 @@ fn request_parser(req: &mut [u8], restaurant: Restaurant) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::thread;
 
     #[test]
     fn test_parse_method() -> Result<(), String> {
@@ -242,6 +243,37 @@ mod tests {
         assert_eq!(parse_api("add/xxx"), (RequestApi::Unknown, vec![]));
         assert_eq!(parse_api("/"), (RequestApi::Unknown, vec![]));
         assert_eq!(parse_api(""), (RequestApi::Unknown, vec![]));
+        Ok(())
+    }
+
+    #[test]
+    fn integration_test_add_item() -> Result<(), String> {
+        let restaurant = Restaurant::new(200);
+        let desire_table_id = 0;
+        let add_amount = 100;
+
+        let mut handles = vec![];
+
+        for test_id in 0..add_amount {
+            let restaurant = restaurant.clone();
+
+            let req = format!("POST /add/{}/{}", desire_table_id, test_id);
+            let mut bytes: Vec<u8> = req.as_bytes().to_vec();
+
+            let handle = thread::spawn(move || {
+                let _res = request_parser(&mut bytes, restaurant.clone());
+            });
+
+            handles.push(handle);
+        }
+        for handle in handles {
+            handle.join().unwrap();
+        }
+
+        let t = restaurant.get_table(desire_table_id);
+        let len = t.lock().unwrap().items_size();
+        assert_eq!(len, add_amount);
+
         Ok(())
     }
 }
