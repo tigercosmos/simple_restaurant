@@ -1,9 +1,10 @@
 use super::lock;
 use rand::rngs::StdRng;
-use rand::{SeedableRng, Rng};
+use rand::{Rng, SeedableRng};
 use std::collections::HashMap;
 
 pub struct Table {
+    table_id: u32,
     items: HashMap<u32, Item>,
     mutex: lock::Mutex,
     rng: StdRng,
@@ -17,18 +18,24 @@ struct Item {
 }
 
 impl Table {
-    pub fn new() -> Table {
+    pub fn new(tid: u32) -> Table {
         Table {
+            table_id: tid,
             items: HashMap::new(),
             mutex: lock::Mutex::new(),
             rng: StdRng::from_entropy(),
         }
     }
 
-    pub fn add_item(&mut self, item_id: u32, table_id: u32) {
+    #[cfg(test)]
+    pub fn id(&self) -> u32 {
+        self.table_id
+    }
+
+    pub fn add_item(&mut self, item_id: u32) {
         self.mutex.lock();
 
-        let item = Item::new(item_id, table_id, self.rng.gen_range(5..15));
+        let item = Item::new(item_id, self.table_id, self.rng.gen_range(5..15));
         self.items.insert(item_id, item);
 
         self.mutex.unlock();
@@ -82,17 +89,18 @@ mod tests {
 
     #[test]
     fn test_table_add_item() -> Result<(), String> {
-        let mut t = Table::new();
+        let table_id = 12;
+
+        let mut t = Table::new(table_id);
 
         let item_id = 4;
-        let table_id = 5;
 
-        t.add_item(item_id, table_id);
+        t.add_item(item_id);
 
         let i = t.items.get(&item_id).unwrap();
 
-        assert_eq!(i.item_id, 4);
-        assert_eq!(i.table_id, 5);
+        assert_eq!(i.item_id, item_id);
+        assert_eq!(i.table_id, table_id);
         assert_eq!(i.prepare_time >= 5 && i.prepare_time < 15, true);
 
         Ok(())
@@ -100,12 +108,11 @@ mod tests {
 
     #[test]
     fn test_table_check_item() -> Result<(), String> {
-        let mut t = Table::new();
+        let mut t = Table::new(1);
 
         let item_id = 7;
-        let table_id = 9;
 
-        t.add_item(item_id, table_id);
+        t.add_item(item_id);
         let i = t.check_item(item_id).unwrap();
         assert_eq!(i.item_id, item_id);
 
@@ -117,12 +124,11 @@ mod tests {
 
     #[test]
     fn test_table_remove_item() -> Result<(), String> {
-        let mut t = Table::new();
+        let mut t = Table::new(1);
 
         let item_id = 11;
-        let table_id = 99;
 
-        t.add_item(item_id, table_id);
+        t.add_item(item_id);
 
         let i = t.remove_item(item_id).unwrap();
         assert_eq!(i.item_id, item_id);
