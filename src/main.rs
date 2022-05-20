@@ -31,6 +31,7 @@ use tokio::net::TcpListener;
 mod api;
 mod restaurant;
 mod table;
+mod item;
 
 use restaurant::Restaurant;
 

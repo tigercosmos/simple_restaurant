@@ -2,17 +2,12 @@ use rand::rngs::StdRng;
 use rand::{Rng, SeedableRng};
 use std::collections::HashMap;
 
+use super::item::Item;
+
 pub struct Table {
     table_id: u32,
     items: HashMap<u32, Item>,
     rng: StdRng,
-}
-
-#[derive(Debug, PartialEq)]
-struct Item {
-    item_id: u32,
-    table_id: u32,
-    prepare_time: u32,
 }
 
 impl Table {
@@ -65,43 +60,9 @@ impl Table {
     }
 }
 
-impl Item {
-    pub fn new(p_item_id: u32, p_table_id: u32, p_time: u32) -> Item {
-        Item {
-            item_id: p_item_id,
-            table_id: p_table_id,
-            prepare_time: p_time,
-        }
-    }
-
-    pub fn print(&self) -> String {
-        let s = format!(
-            "{{item_id: {}, table_id: {}, prepare_time: {}}}",
-            self.item_id, self.table_id, self.prepare_time
-        );
-
-        s
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn test_item() -> Result<(), String> {
-        let i = Item::new(1, 2, 3);
-
-        assert_eq!(
-            i,
-            Item {
-                item_id: 1,
-                table_id: 2,
-                prepare_time: 3,
-            }
-        );
-        Ok(())
-    }
 
     #[test]
     fn test_table_add_item() -> Result<(), String> {
@@ -115,10 +76,6 @@ mod tests {
 
         let i = t.items.get(&item_id).unwrap();
 
-        assert_eq!(i.item_id, item_id);
-        assert_eq!(i.table_id, table_id);
-        assert_eq!(i.prepare_time >= 5 && i.prepare_time < 15, true);
-
         Ok(())
     }
 
@@ -130,7 +87,7 @@ mod tests {
 
         t.add_item(item_id);
         let i = t.check_item(item_id).unwrap();
-        assert_eq!(i.item_id, item_id);
+        assert_eq!(i.id(), item_id);
 
         let i2 = t.check_item(123);
         assert_eq!(i2, None);
@@ -147,7 +104,7 @@ mod tests {
         t.add_item(item_id);
 
         let i = t.remove_item(item_id).unwrap();
-        assert_eq!(i.item_id, item_id);
+        assert_eq!(i.id(), item_id);
 
         let i2 = t.remove_item(item_id);
         assert_eq!(i2, None);
