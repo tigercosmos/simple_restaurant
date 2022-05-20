@@ -32,6 +32,11 @@ impl Table {
         self.table_id
     }
 
+    #[cfg(test)]
+    pub fn items_size(&self) -> usize {
+        self.items.len()
+    }
+
     pub fn add_item(&mut self, item_id: u32) {
         self.mutex.lock();
 
