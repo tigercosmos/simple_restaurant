@@ -1,4 +1,3 @@
-use super::lock;
 use rand::rngs::StdRng;
 use rand::{Rng, SeedableRng};
 use std::collections::HashMap;
@@ -6,7 +5,6 @@ use std::collections::HashMap;
 pub struct Table {
     table_id: u32,
     items: HashMap<u32, Item>,
-    mutex: lock::Mutex,
     rng: StdRng,
 }
 
@@ -22,7 +20,6 @@ impl Table {
         Table {
             table_id: tid,
             items: HashMap::new(),
-            mutex: lock::Mutex::new(),
             rng: StdRng::from_entropy(),
         }
     }
@@ -38,28 +35,16 @@ impl Table {
     }
 
     pub fn add_item(&mut self, item_id: u32) {
-        self.mutex.lock();
-
         let item = Item::new(item_id, self.table_id, self.rng.gen_range(5..15));
         self.items.insert(item_id, item);
-
-        self.mutex.unlock();
     }
 
     pub fn check_item(&self, item_id: u32) -> Option<&Item> {
-        self.mutex.lock();
-        let check = self.items.get(&item_id);
-        self.mutex.unlock();
-
-        check
+        self.items.get(&item_id)
     }
 
     pub fn remove_item(&mut self, item_id: u32) -> Option<Item> {
-        self.mutex.lock();
-        let item = self.items.remove(&item_id);
-        self.mutex.unlock();
-
-        item
+        self.items.remove(&item_id)
     }
 }
 
