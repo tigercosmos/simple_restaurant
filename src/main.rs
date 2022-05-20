@@ -29,7 +29,6 @@ use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::TcpListener;
 
 mod api;
-mod lock;
 mod restaurant;
 mod table;
 
@@ -51,7 +50,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     println!("Listening on: {}", addr);
 
     // create 200 tables for the restaurant
-    let restaurant = Arc::new(Restaurant::new(200));
+    let restaurant = Restaurant::new(200);
 
     loop {
         // Asynchronously wait for an inbound socket.
@@ -65,7 +64,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         // Essentially here we're executing a new task to run concurrently,
         // which will allow all of our clients to be processed concurrently.
 
-        let restaurant = Arc::clone(&restaurant);
+        let restaurant = restaurant.clone();
 
         tokio::spawn(async move {
             let mut buf = vec![0; 1024];
@@ -81,7 +80,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
                     return;
                 }
 
-                let response = request_parser(&mut buf[0..n]);
+                let response = request_parser(&mut buf[0..n], restaurant.clone());
 
                 socket
                     .write_all(response.as_bytes())
@@ -142,7 +141,7 @@ fn parse_api(s: &str) -> (RequestApi, Vec<&str>) {
     }
 }
 
-fn request_parser(req: &mut [u8]) -> String {
+fn request_parser(req: &mut [u8], restaurant: Restaurant) -> String {
     let req_str = str::from_utf8(req).unwrap();
 
     let split = req_str.split(' ');
