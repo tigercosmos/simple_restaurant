@@ -42,6 +42,19 @@ impl Table {
         self.items.remove(&item_id)
     }
 
+    pub fn print_item(&self, item_id: u32) -> String {
+        let item = self.check_item(item_id);
+
+        match item {
+            Some(item) => {
+                return item.print();
+            }
+            None => {
+                return "{ msg: \"not found\"}".to_owned();
+            }
+        }
+    }
+
     pub fn print_items(&self) -> String {
         let mut output = String::from("[");
 
@@ -74,7 +87,7 @@ mod tests {
 
         t.add_item(item_id);
 
-        let i = t.items.get(&item_id).unwrap();
+        t.items.get(&item_id).unwrap();
 
         Ok(())
     }

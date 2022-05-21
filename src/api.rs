@@ -8,7 +8,11 @@ pub fn query_all(tid: u32, restaurant: Restaurant) -> String {
 
     output
 }
-pub fn query_one() {}
+pub fn query_one(tid: u32, iid: u32, restaurant: Restaurant) -> String {
+    let t = restaurant.get_table(tid);
+    let s = t.lock().unwrap().print_item(iid);
+    s
+}
 
 #[cfg(test)]
 mod tests {
@@ -31,5 +35,17 @@ mod tests {
 
         assert_eq!(output.contains("item_id: 0"), true);
         assert_eq!(output.contains("item_id: 1"), true);
+    }
+
+    #[test]
+    fn test_api_query_one() {
+        let r = create_restaurant(1, 2);
+        let r2 = r.clone();
+
+        let output = query_one(0, 1, r);
+        assert_eq!(output.contains("item_id: 1"), true);
+
+        let output2 = query_one(0, 3, r2);
+        assert_eq!(output2.contains("{ msg: \"not found\"}"), true);
     }
 }

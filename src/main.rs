@@ -29,9 +29,9 @@ use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::TcpListener;
 
 mod api;
+mod item;
 mod restaurant;
 mod table;
-mod item;
 
 use restaurant::Restaurant;
 
@@ -164,11 +164,14 @@ fn request_parser(req: &mut [u8], restaurant: Restaurant) -> String {
                     let tid: u32 = api_param[0].parse::<u32>().unwrap();
 
                     // `/query/:table_id`
-                    api::query_all(tid, restaurant);
+                    return api::query_all(tid, restaurant);
                 }
                 2 => {
+                    let tid: u32 = api_param[0].parse::<u32>().unwrap();
+                    let iid: u32 = api_param[1].parse::<u32>().unwrap();
+
                     // `/query/:table_id/:item_id`
-                    api::query_one();
+                    return api::query_one(tid, iid, restaurant);
                 }
                 _ => return "wrong api".to_string(),
             },
