@@ -208,7 +208,7 @@ fn request_parser(req: &mut [u8], restaurant: Restaurant) -> String {
         }
     }
 
-    "".to_string()
+    "unknown request".to_string()
 }
 
 #[cfg(test)]
@@ -246,11 +246,8 @@ mod tests {
         Ok(())
     }
 
-    #[test]
-    fn integration_test_add_item() -> Result<(), String> {
+    fn get_restaruant_ready(desire_table_id: u32, add_amount: usize) -> Restaurant {
         let restaurant = Restaurant::new(200);
-        let desire_table_id = 0;
-        let add_amount = 100;
 
         let mut handles = vec![];
 
@@ -270,9 +267,51 @@ mod tests {
             handle.join().unwrap();
         }
 
+        restaurant
+    }
+
+    #[test]
+    fn integration_test_add_item() -> Result<(), String> {
+        let desire_table_id = 0;
+        let add_amount = 100;
+        let restaurant = get_restaruant_ready(desire_table_id, add_amount);
+
         let t = restaurant.get_table(desire_table_id);
         let len = t.lock().unwrap().items_size();
         assert_eq!(len, add_amount);
+
+        Ok(())
+    }
+
+    #[test]
+    fn integration_test_remove_item() -> Result<(), String> {
+        let desire_table_id = 0;
+        let add_amount = 100;
+        let remove_amount = 76;
+        let restaurant = get_restaruant_ready(desire_table_id, add_amount);
+
+        let mut handles = vec![];
+
+        for test_id in 0..remove_amount {
+            let restaurant = restaurant.clone();
+
+            let req = format!("DELETE /remove/{}/{}", desire_table_id, test_id);
+            let mut bytes: Vec<u8> = req.as_bytes().to_vec();
+
+            let handle = thread::spawn(move || {
+                let _res = request_parser(&mut bytes, restaurant.clone());
+                println!("{}", _res);
+            });
+
+            handles.push(handle);
+        }
+        for handle in handles {
+            handle.join().unwrap();
+        }
+
+        let t = restaurant.get_table(desire_table_id);
+        let len = t.lock().unwrap().items_size();
+        assert_eq!(len, add_amount - remove_amount);
 
         Ok(())
     }
