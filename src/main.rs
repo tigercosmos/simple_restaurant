@@ -24,7 +24,6 @@
 use std::env;
 use std::error::Error;
 use std::str;
-use std::sync::Arc;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::TcpListener;
 
@@ -180,8 +179,11 @@ fn request_parser(req: &mut [u8], restaurant: Restaurant) -> String {
         RequestMethod::Post => match api {
             RequestApi::Add => match api_param.len() {
                 1 => {
-                    // `/add/<item>`
-                    api::add_item();
+                    let tid: u32 = api_param[0].parse::<u32>().unwrap();
+                    let item_data: &str = api_param[1];
+
+                    // `/add/:table_id/<item>`
+                    api::add_item(tid, item_data, restaurant);
                 }
                 _ => return "wrong api".to_string(),
             },

@@ -1,6 +1,14 @@
 use super::restaurant::Restaurant;
 
-pub fn add_item() {}
+pub fn add_item(tid: u32, item_data: &str, restaurant: Restaurant) -> String {
+    let data = item_data.split(",").collect::<Vec<&str>>();
+    let iid = data[0].parse::<u32>().unwrap();
+
+    let t = restaurant.get_table(tid);
+    t.lock().unwrap().add_item(iid);
+
+    "{ msg: \"success\"}".to_owned()
+}
 pub fn remove_item(tid: u32, iid: u32, restaurant: Restaurant) -> String {
     let t = restaurant.get_table(tid);
     let result = t.lock().unwrap().remove_item(iid);
@@ -77,5 +85,26 @@ mod tests {
 
         let output2 = remove_item(0, item_id, r3);
         assert_eq!(output2.contains("cannot remove"), true);
+    }
+
+    #[test]
+    fn test_api_add_item() {
+        let item_amount = 5;
+
+        let r = create_restaurant(1, item_amount);
+
+        add_item(0, "999,", r.clone());
+
+        assert_eq!(
+            r.clone().get_table(0).lock().unwrap().items_size(),
+            item_amount + 1
+        );
+
+        add_item(0, "777", r.clone());
+
+        assert_eq!(
+            r.clone().get_table(0).lock().unwrap().items_size(),
+            item_amount + 2
+        );
     }
 }
