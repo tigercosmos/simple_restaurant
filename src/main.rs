@@ -190,8 +190,11 @@ fn request_parser(req: &mut [u8], restaurant: Restaurant) -> String {
         RequestMethod::Delete => match api {
             RequestApi::Remove => match api_param.len() {
                 2 => {
+                    let tid: u32 = api_param[0].parse::<u32>().unwrap();
+                    let iid: u32 = api_param[1].parse::<u32>().unwrap();
+
                     // `/romove/:table_id/:item_id`
-                    api::remove_item();
+                    return api::remove_item(tid, iid, restaurant);
                 }
                 _ => return "wrong api".to_string(),
             },

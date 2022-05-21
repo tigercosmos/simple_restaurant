@@ -1,7 +1,16 @@
 use super::restaurant::Restaurant;
 
 pub fn add_item() {}
-pub fn remove_item() {}
+pub fn remove_item(tid: u32, iid: u32, restaurant: Restaurant) -> String {
+    let t = restaurant.get_table(tid);
+    let result = t.lock().unwrap().remove_item(iid);
+    match result {
+        Some(_) => "{ msg: \"success\"}".to_owned(),
+        None => {
+            return "{ msg: \"cannot remove, not exist\"}".to_owned();
+        }
+    }
+}
 pub fn query_all(tid: u32, restaurant: Restaurant) -> String {
     let t = restaurant.get_table(tid);
     let output = t.lock().unwrap().print_items();
@@ -47,5 +56,26 @@ mod tests {
 
         let output2 = query_one(0, 3, r2);
         assert_eq!(output2.contains("{ msg: \"not found\"}"), true);
+    }
+
+    #[test]
+    fn test_api_remove_item() {
+        let item_amount = 5;
+        let item_id = 1;
+
+        let r = create_restaurant(1, item_amount);
+        let r2 = r.clone();
+        let r3 = r.clone();
+
+        let output = remove_item(0, item_id, r);
+        assert_eq!(output.contains("success"), true);
+
+        assert_eq!(
+            r2.get_table(0).lock().unwrap().items_size(),
+            item_amount - 1
+        );
+
+        let output2 = remove_item(0, item_id, r3);
+        assert_eq!(output2.contains("cannot remove"), true);
     }
 }
