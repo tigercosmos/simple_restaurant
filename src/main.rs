@@ -315,4 +315,33 @@ mod tests {
 
         Ok(())
     }
+
+    #[test]
+    fn integration_test_check_item() -> Result<(), String> {
+        let desire_table_id = 0;
+        let add_amount = 20;
+        let restaurant = get_restaruant_ready(desire_table_id, add_amount);
+
+        let mut handles = vec![];
+
+        for test_id in 0..add_amount {
+            let restaurant = restaurant.clone();
+
+            let req = format!("GET /query/{}/{}", desire_table_id, test_id);
+            let mut bytes: Vec<u8> = req.as_bytes().to_vec();
+
+            let handle = thread::spawn(move || {
+                let res = request_parser(&mut bytes, restaurant.clone());
+                let s = format!("item_id: {}", test_id);
+                assert_eq!(res.contains(&s), true);
+            });
+
+            handles.push(handle);
+        }
+        for handle in handles {
+            handle.join().unwrap();
+        }
+
+        Ok(())
+    }
 }
