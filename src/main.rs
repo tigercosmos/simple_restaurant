@@ -344,4 +344,55 @@ mod tests {
 
         Ok(())
     }
+
+    #[test]
+    fn integration_test_check_all_item() -> Result<(), String> {
+        let desire_table_id = 0;
+        let add_amount = 20;
+        let remove_amount = 17;
+        let restaurant = get_restaruant_ready(desire_table_id, add_amount);
+
+        let mut handles = vec![];
+
+        for test_id in 0..remove_amount {
+            let restaurant = restaurant.clone();
+
+            let req = format!("DELETE /remove/{}/{}", desire_table_id, test_id);
+            let mut bytes: Vec<u8> = req.as_bytes().to_vec();
+
+            let handle = thread::spawn(move || {
+                let _res = request_parser(&mut bytes, restaurant.clone());
+                println!("{}", _res);
+            });
+
+            handles.push(handle);
+        }
+        for handle in handles {
+            handle.join().unwrap();
+        }
+
+        // should only have 17 18 19
+        {
+            let restaurant = restaurant.clone();
+
+            let req = format!("GET /query/{}", desire_table_id);
+            let mut bytes: Vec<u8> = req.as_bytes().to_vec();
+
+            let _ = thread::spawn(move || {
+                let res = request_parser(&mut bytes, restaurant.clone());
+                let s0 = "item_id: 16";
+                let s1 = "item_id: 17";
+                let s2 = "item_id: 18";
+                let s3 = "item_id: 19";
+                let s4 = "item_id: 20";
+                assert_eq!(res.contains(&s0), false);
+                assert_eq!(res.contains(&s1), true);
+                assert_eq!(res.contains(&s2), true);
+                assert_eq!(res.contains(&s3), true);
+                assert_eq!(res.contains(&s4), false);
+            });
+        }
+
+        Ok(())
+    }
 }
