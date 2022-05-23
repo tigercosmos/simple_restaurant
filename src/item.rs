@@ -21,7 +21,7 @@ impl Item {
 
     pub fn print(&self) -> String {
         let s = format!(
-            "{{item_id: {}, table_id: {}, prepare_time: {}}}",
+            "{{\"item_id\": {}, \"table_id\": {}, \"prepare_time\": {}}}",
             self.item_id, self.table_id, self.prepare_time
         );
 

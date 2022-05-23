@@ -13,9 +13,9 @@ pub fn remove_item(tid: u32, iid: u32, restaurant: Restaurant) -> String {
     let t = restaurant.get_table(tid);
     let result = t.lock().unwrap().remove_item(iid);
     match result {
-        Some(_) => "{ msg: \"success\"}".to_owned(),
+        Some(_) => "{ \"msg\": \"success\"}".to_owned(),
         None => {
-            return "{ msg: \"cannot remove, not exist\"}".to_owned();
+            return "{ \"msg\": \"cannot remove, not exist\"}".to_owned();
         }
     }
 }
@@ -50,8 +50,8 @@ mod tests {
 
         let output = query_all(0, r);
 
-        assert_eq!(output.contains("item_id: 0"), true);
-        assert_eq!(output.contains("item_id: 1"), true);
+        assert_eq!(output.contains("\"item_id\": 0"), true);
+        assert_eq!(output.contains("\"item_id\": 1"), true);
     }
 
     #[test]
@@ -60,10 +60,10 @@ mod tests {
         let r2 = r.clone();
 
         let output = query_one(0, 1, r);
-        assert_eq!(output.contains("item_id: 1"), true);
+        assert_eq!(output.contains("\"item_id\": 1"), true);
 
         let output2 = query_one(0, 3, r2);
-        assert_eq!(output2.contains("{ msg: \"not found\"}"), true);
+        assert_eq!(output2.contains("{\"msg\": \"not found\"}"), true);
     }
 
     #[test]

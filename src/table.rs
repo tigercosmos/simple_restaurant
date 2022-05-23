@@ -50,7 +50,7 @@ impl Table {
                 return item.print();
             }
             None => {
-                return "{ msg: \"not found\"}".to_owned();
+                return "{\"msg\": \"not found\"}".to_owned();
             }
         }
     }

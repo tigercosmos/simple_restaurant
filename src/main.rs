@@ -143,6 +143,7 @@ fn parse_api(s: &str) -> (RequestApi, Vec<&str>) {
 
 fn request_parser(req: &mut [u8], restaurant: Restaurant) -> String {
     let req_str = str::from_utf8(req).unwrap();
+    println!("Request: {}", req_str);
 
     let split = req_str.split(' ');
 
@@ -183,7 +184,7 @@ fn request_parser(req: &mut [u8], restaurant: Restaurant) -> String {
                     let item_data: &str = api_param[1];
 
                     // `/add/:table_id/<item>`
-                    api::add_item(tid, item_data, restaurant);
+                    return api::add_item(tid, item_data, restaurant);
                 }
                 _ => return "wrong api".to_string(),
             },
@@ -332,7 +333,7 @@ mod tests {
 
             let handle = thread::spawn(move || {
                 let res = request_parser(&mut bytes, restaurant.clone());
-                let s = format!("item_id: {}", test_id);
+                let s = format!("\"item_id\": {}", test_id);
                 assert_eq!(res.contains(&s), true);
             });
 
@@ -380,11 +381,11 @@ mod tests {
 
             let _ = thread::spawn(move || {
                 let res = request_parser(&mut bytes, restaurant.clone());
-                let s0 = "item_id: 16";
-                let s1 = "item_id: 17";
-                let s2 = "item_id: 18";
-                let s3 = "item_id: 19";
-                let s4 = "item_id: 20";
+                let s0 = "\"item_id\": 16";
+                let s1 = "\"item_id\": 17";
+                let s2 = "\"item_id\": 18";
+                let s3 = "\"item_id\": 19";
+                let s4 = "\"item_id\": 20";
                 assert_eq!(res.contains(&s0), false);
                 assert_eq!(res.contains(&s1), true);
                 assert_eq!(res.contains(&s2), true);
